@@ -2,9 +2,48 @@
 <html>
 <head>
   <title>Config Storage</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    
+    #dropArea {
+      border: 2px dashed #ccc;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      width: 300px;
+      margin: 50px auto;
+    }
+    
+    #fileList {
+      margin-top: 20px;
+    }
+    
+    #fileList ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    
+    #fileList li {
+      margin-bottom: 10px;
+    }
+    
+    #fileList a {
+      text-decoration: none;
+      color: #333;
+      background-color: #f9f9f9;
+      padding: 5px 10px;
+      border-radius: 5px;
+    }
+  </style>
 </head>
 <body>
   <h1>Config Storage</h1>
+
+  <div id="dropArea">
+    <p>Drag and drop .rar and .zip files here</p>
+  </div>
 
   <div id="fileList">
     <h2>Files in Mega.nz Folder</h2>
@@ -16,35 +55,62 @@
     const folderLink = "https://mega.nz/folder/gA0yyCyR";
     const decryptionKey = "1FDEowxKxYwWzQmAQLTuOA";
 
-    function displayFiles() {
-      const fileItems = document.getElementById("fileItems");
+    const dropArea = document.getElementById("dropArea");
+    const fileItems = document.getElementById("fileItems");
 
-      // Configure the Mega.nz SDK
+    dropArea.addEventListener("dragover", handleDragOver);
+    dropArea.addEventListener("drop", handleFileDrop);
+
+    function handleDragOver(event) {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "copy";
+      dropArea.style.border = "2px dashed #aaa";
+    }
+
+    function handleFileDrop(event) {
+      event.preventDefault();
+      dropArea.style.border = "2px dashed #ccc";
+
+      const files = event.dataTransfer.files;
+      const validFiles = Array.from(files).filter(isValidFile);
+
+      validFiles.forEach((file) => {
+        const fileItem = document.createElement("li");
+        const fileLink = document.createElement("a");
+        fileLink.href = "#";
+
+        fileLink.textContent = file.name;
+        fileLink.addEventListener("click", () => {
+          downloadFile(file.name);
+        });
+
+        fileItem.appendChild(fileLink);
+        fileItems.appendChild(fileItem);
+      });
+    }
+
+    function isValidFile(file) {
+      const allowedExtensions = [".rar", ".zip"];
+      const fileExtension = file.name.substring(file.name.lastIndexOf(".")).toLowerCase();
+      return allowedExtensions.includes(fileExtension);
+    }
+
+    function downloadFile(fileName) {
       const megaSdk = new MegaSdk({});
 
       megaSdk.getPublicNodeFromLink(folderLink, decryptionKey)
         .then((node) => {
-          // Retrieve file information from the folder node
-          const files = node.children;
+          const targetFile = node.children.find((file) => file.name === fileName);
 
-          // Display each file as a list item
-          files.forEach((file) => {
-            const fileItem = document.createElement("li");
-            const fileLink = document.createElement("a");
-            fileLink.href = megaSdk.exportFileLink(file);
-
-            fileLink.textContent = file.name;
-            fileItem.appendChild(fileLink);
-            fileItems.appendChild(fileItem);
-          });
+          if (targetFile) {
+            const downloadUrl = megaSdk.exportFileLink(targetFile);
+            window.location.href = downloadUrl;
+          }
         })
         .catch((error) => {
-          console.error("Error occurred while retrieving files:", error);
+          console.error("Error occurred during file download:", error);
         });
     }
-
-    // Call the displayFiles function to initiate the retrieval and display of files
-    displayFiles();
   </script>
 </body>
 </html>
