@@ -5,39 +5,56 @@
   <style>
     /* Add your custom CSS styling here */
     body {
-      background-color: #f2f2f2;
-      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
       margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f1f1f1;
+    }
+
+    .container {
+      width: 400px;
       padding: 20px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
-    h1 {
-      color: #333333;
+
+    .file-upload {
+      border: 2px dashed #ddd;
+      padding: 20px;
       text-align: center;
+      cursor: pointer;
     }
-    h2 {
-      color: #666666;
+
+    .file-upload:hover {
+      background-color: #f9f9f9;
     }
-    ul {
+
+    #fileList {
+      margin-top: 20px;
       list-style-type: none;
       padding: 0;
     }
-    li {
+
+    #fileList li {
       margin-bottom: 10px;
-    }
-    a {
-      color: #0066cc;
-      text-decoration: none;
-    }
-    a:hover {
-      text-decoration: underline;
     }
   </style>
 </head>
 <body>
-  <h1>ConfigStorage</h1>
+  <div class="container">
+    <h1>ConfigStorage</h1>
 
-  <h2>Configs</h2>
-  <ul id="fileList"></ul>
+    <div class="file-upload" id="fileUpload">
+      <p>Drag and drop your files here or click to select files</p>
+      <input type="file" id="uploadInput" multiple>
+    </div>
+
+    <ul id="fileList"></ul>
+  </div>
 
   <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
   <script>
@@ -46,30 +63,66 @@
     var repoName = 'ConfigStorage';
     var accessToken = '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';
     
-    // Retrieve file list from GitHub repository
-    axios.get('https://api.github.com/repos/' + repoOwner + '/' + repoName + '/contents', {
-      headers: {
-        Authorization: 'Bearer ' + accessToken
-      }
-    })
-      .then(function(response) {
-        var fileList = response.data;
-        var ul = document.getElementById('fileList');
+    // Handle file upload
+    var fileUpload = document.getElementById('fileUpload');
+    fileUpload.addEventListener('dragover', handleDragOver);
+    fileUpload.addEventListener('dragleave', handleDragLeave);
+    fileUpload.addEventListener('drop', handleFileDrop);
 
-        fileList.forEach(function(file) {
-          if (file.type === 'file') {
-            var li = document.createElement('li');
-            var link = document.createElement('a');
-            link.href = file.download_url;
-            link.textContent = file.name;
-            li.appendChild(link);
-            ul.appendChild(li);
+    function handleDragOver(event) {
+      event.preventDefault();
+      fileUpload.classList.add('file-upload-hover');
+    }
+
+    function handleDragLeave(event) {
+      event.preventDefault();
+      fileUpload.classList.remove('file-upload-hover');
+    }
+
+    function handleFileDrop(event) {
+      event.preventDefault();
+      fileUpload.classList.remove('file-upload-hover');
+      var files = event.dataTransfer.files;
+      uploadFiles(files);
+    }
+
+    // Handle file selection
+    var uploadInput = document.getElementById('uploadInput');
+    uploadInput.addEventListener('change', function(event) {
+      var files = event.target.files;
+      uploadFiles(files);
+    });
+
+    // Upload files to GitHub repository
+    function uploadFiles(files) {
+      var ul = document.getElementById('fileList');
+      ul.innerHTML = '';
+
+      Array.from(files).forEach(function(file) {
+        var formData = new FormData();
+        formData.append('file', file);
+
+        axios.post('https://api.github.com/repos/' + repoOwner + '/' + repoName + '/contents/' + file.name, {
+          content: btoa(file),
+          message: 'Upload ' + file.name,
+          branch: 'main'
+        }, {
+          headers: {
+            Authorization: 'Bearer ' + accessToken
           }
-        });
-      })
-      .catch(function(error) {
-        console.error('Error retrieving file list:', error);
+        })
+          .then(function(response) {
+            var li = document.createElement('li');
+            li.textContent = file.name + ' uploaded successfully';
+            ul.appendChild(li);
+          })
+          .catch(function(error) {
+            var li = document.createElement('li');
+            li.textContent = 'Error uploading ' + file.name;
+            ul.appendChild(li);
+          });
       });
+    }
   </script>
 </body>
 </html>
