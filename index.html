@@ -4,95 +4,109 @@
   <title>ConfigStorage</title>
   <style>
     /* Add your custom CSS styling here */
-    body {
-      text-align: center;
-    }
-    
-    #dropArea {
-      width: 300px;
-      height: 200px;
-      border: 2px dashed gray;
-      margin: 50px auto;
+    .drop-zone {
+      border: 2px dashed #ccc;
       padding: 20px;
-    }
-    
-    #fileList {
-      list-style-type: none;
+      text-align: center;
+      font-size: 18px;
     }
   </style>
 </head>
 <body>
   <h1>ConfigStorage</h1>
-  
-  <h2>Drag and Drop .rar and .zip Files Here</h2>
-  
-  <div id="dropArea">
-    Drop files here
-  </div>
-  
+
   <h2>Configs</h2>
   <ul id="fileList"></ul>
-  
+
+  <div class="drop-zone" id="dropZone">Drag and drop .rar and .zip files here</div>
+
   <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
   <script>
     // GitHub repository details
     var repoOwner = 'CrimsonfiedOfficial';
     var repoName = 'ConfigStorage';
     var accessToken = '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';
-    
-    var dropArea = document.getElementById('dropArea');
-    var fileList = document.getElementById('fileList');
-    
-    // Handle file drop event
-    dropArea.addEventListener('drop', function(e) {
-      e.preventDefault();
-      var files = e.dataTransfer.files;
-      
-      uploadFiles(files);
-    });
-    
-    // Prevent default behavior for dragover and dragenter events
-    dropArea.addEventListener('dragover', function(e) {
-      e.preventDefault();
-    });
-    
-    dropArea.addEventListener('dragenter', function(e) {
-      e.preventDefault();
-    });
-    
-    // Upload files to GitHub repository
-    function uploadFiles(files) {
-      for (var i = 0; i < files.length; i++) {
-        var file = files[i];
-        
-        if (file.type === 'application/zip' || file.type === 'application/x-rar-compressed') {
-          var formData = new FormData();
-          formData.append('file', file);
-          
-          axios.post('https://api.github.com/repos/' + repoOwner + '/' + repoName + '/contents/' + file.name, formData, {
-            headers: {
-              'Content-Type': 'application/octet-stream',
-              'Authorization': 'Bearer ' + accessToken
-            }
-          })
-          .then(function(response) {
-            var data = response.data;
-            
-            if (data.content) {
+
+    // Retrieve file list from GitHub repository
+    function getFileList() {
+      axios.get('https://api.github.com/repos/' + repoOwner + '/' + repoName + '/contents', {
+        headers: {
+          Authorization: 'Bearer ' + accessToken
+        }
+      })
+        .then(function(response) {
+          var fileList = response.data;
+          var ul = document.getElementById('fileList');
+          ul.innerHTML = '';
+
+          fileList.forEach(function(file) {
+            if (file.type === 'file') {
               var li = document.createElement('li');
               var link = document.createElement('a');
-              link.href = data.download_url;
-              link.textContent = data.name;
+              link.href = file.download_url;
+              link.textContent = file.name;
               li.appendChild(link);
-              fileList.appendChild(li);
+              ul.appendChild(li);
             }
-          })
-          .catch(function(error) {
-            console.error('Error uploading file:', error);
           });
-        }
-      }
+        })
+        .catch(function(error) {
+          console.error('Error retrieving file list:', error);
+        });
     }
+
+    // Handle file drop event
+    function handleFileDrop(event) {
+      event.preventDefault();
+      var files = event.dataTransfer.files;
+      uploadFiles(files);
+    }
+
+    // Handle file drag over event
+    function handleDragOver(event) {
+      event.preventDefault();
+    }
+
+    // Upload files to the GitHub repository
+    function uploadFiles(files) {
+      var uploadPromises = [];
+      var ul = document.getElementById('fileList');
+
+      for (var i = 0; i < files.length; i++) {
+        var file = files[i];
+        var formData = new FormData();
+        formData.append('file', file);
+
+        var uploadPromise = axios.post('https://api.github.com/repos/' + repoOwner + '/' + repoName + '/contents/' + file.name, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: 'Bearer ' + accessToken
+          }
+        });
+
+        uploadPromises.push(uploadPromise);
+
+        var li = document.createElement('li');
+        li.textContent = 'Uploading ' + file.name + '...';
+        ul.appendChild(li);
+      }
+
+      axios.all(uploadPromises)
+        .then(function() {
+          getFileList();
+        })
+        .catch(function(error) {
+          console.error('Error uploading files:', error);
+        });
+    }
+
+    // Add event listeners for drag and drop functionality
+    var dropZone = document.getElementById('dropZone');
+    dropZone.addEventListener('dragover', handleDragOver);
+    dropZone.addEventListener('drop', handleFileDrop);
+
+    // Initial file list retrieval
+    getFileList();
   </script>
 </body>
 </html>
