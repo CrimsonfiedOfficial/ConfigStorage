@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Config Storage</title>
+</head>
+<body>
+  <h1>Config Storage</h1>
+
+  <div id="fileList">
+    <h2>Files in Mega.nz Folder</h2>
+    <ul id="fileItems"></ul>
+  </div>
+
+  <script src="https://sdk.static.mega.co.nz/js/sdk.js"></script>
+  <script>
+    const folderLink = "https://mega.nz/folder/gA0yyCyR";
+    const decryptionKey = "1FDEowxKxYwWzQmAQLTuOA";
+
+    function displayFiles() {
+      const fileItems = document.getElementById("fileItems");
+
+      // Configure the Mega.nz SDK
+      const megaSdk = new MegaSdk({});
+
+      megaSdk.getPublicNodeFromLink(folderLink, decryptionKey)
+        .then((node) => {
+          // Retrieve file information from the folder node
+          const files = node.children;
+
+          // Display each file as a list item
+          files.forEach((file) => {
+            const fileItem = document.createElement("li");
+            const fileLink = document.createElement("a");
+            fileLink.href = megaSdk.exportFileLink(file);
+
+            fileLink.textContent = file.name;
+            fileItem.appendChild(fileLink);
+            fileItems.appendChild(fileItem);
+          });
+        })
+        .catch((error) => {
+          console.error("Error occurred while retrieving files:", error);
+        });
+    }
+
+    // Call the displayFiles function to initiate the retrieval and display of files
+    displayFiles();
+  </script>
+</body>
+</html>
