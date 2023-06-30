@@ -4,10 +4,22 @@
   <title>ConfigStorage</title>
   <style>
     /* Add your custom CSS styling here */
+    .container {
+      text-align: center;
+      border: 2px dashed #aaa;
+      padding: 20px;
+      width: 400px;
+      margin: 0 auto;
+      border-radius: 10px;
+    }
   </style>
 </head>
 <body>
   <h1>ConfigStorage</h1>
+
+  <div class="container" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);">
+    <p>Drag and drop .rar and .zip files here</p>
+  </div>
 
   <h2>Configs</h2>
   <ul id="fileList"></ul>
@@ -17,32 +29,55 @@
     // GitHub repository details
     var repoOwner = 'CrimsonfiedOfficial';
     var repoName = 'ConfigStorage';
-    var accessToken = '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'; // Add your API key here
-    
-    // Retrieve file list from GitHub repository
-    axios.get('https://api.github.com/repos/' + repoOwner + '/' + repoName + '/contents', {
-      headers: {
-        Authorization: 'Bearer ' + accessToken
-      }
-    })
-      .then(function(response) {
-        var fileList = response.data;
-        var ul = document.getElementById('fileList');
+    var accessToken = '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';
 
-        fileList.forEach(function(file) {
-          if (file.type === 'file') {
+    // Handle file drop event
+    function dropHandler(event) {
+      event.preventDefault();
+      var fileList = event.dataTransfer.files;
+      uploadFiles(fileList);
+    }
+
+    // Handle file drag over event
+    function dragOverHandler(event) {
+      event.preventDefault();
+    }
+
+    // Upload files to GitHub repository
+    function uploadFiles(fileList) {
+      var ul = document.getElementById('fileList');
+
+      // Loop through the files
+      for (var i = 0; i < fileList.length; i++) {
+        var file = fileList[i];
+        if (file.type === 'application/zip' || file.type === 'application/x-rar-compressed') {
+          var formData = new FormData();
+          formData.append('file', file);
+
+          // Make API request to upload the file
+          axios.post('https://api.github.com/repos/' + repoOwner + '/' + repoName + '/contents/' + file.name, formData, {
+            headers: {
+              Authorization: 'Bearer ' + accessToken,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          })
+          .then(function(response) {
+            var fileData = response.data;
+
+            // Create a link to the uploaded file
             var li = document.createElement('li');
             var link = document.createElement('a');
-            link.href = file.download_url;
-            link.textContent = file.name;
+            link.href = fileData.download_url;
+            link.textContent = fileData.name;
             li.appendChild(link);
             ul.appendChild(li);
-          }
-        });
-      })
-      .catch(function(error) {
-        console.error('Error retrieving file list:', error);
-      });
+          })
+          .catch(function(error) {
+            console.error('Error uploading file:', error);
+          });
+        }
+      }
+    }
   </script>
 </body>
 </html>
