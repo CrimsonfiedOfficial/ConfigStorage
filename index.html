@@ -5,89 +5,87 @@
   <style>
     /* Add your custom CSS styling here */
     body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-    }
-
-    .container {
       text-align: center;
-      border: 2px dashed #aaa;
-      padding: 20px;
-      width: 400px;
-      border-radius: 10px;
     }
-
+    
+    #dropArea {
+      width: 300px;
+      height: 200px;
+      border: 2px dashed gray;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    
     #fileList {
       list-style-type: none;
-      padding: 0;
-    }
-
-    #fileList li {
-      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
   <h1>ConfigStorage</h1>
-
-  <div class="container" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);">
-    <p>Drag and drop .rar and .zip files here</p>
+  
+  <h2>Drag and Drop .rar and .zip Files Here</h2>
+  
+  <div id="dropArea">
+    Drop files here
   </div>
-
+  
   <h2>Configs</h2>
   <ul id="fileList"></ul>
-
+  
   <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
   <script>
     // GitHub repository details
     var repoOwner = 'CrimsonfiedOfficial';
     var repoName = 'ConfigStorage';
     var accessToken = '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';
-
+    
+    var dropArea = document.getElementById('dropArea');
+    var fileList = document.getElementById('fileList');
+    
     // Handle file drop event
-    function dropHandler(event) {
-      event.preventDefault();
-      var fileList = event.dataTransfer.files;
-      uploadFiles(fileList);
-    }
-
-    // Handle file drag over event
-    function dragOverHandler(event) {
-      event.preventDefault();
-    }
-
+    dropArea.addEventListener('drop', function(e) {
+      e.preventDefault();
+      var files = e.dataTransfer.files;
+      
+      uploadFiles(files);
+    });
+    
+    // Prevent default behavior for dragover and dragenter events
+    dropArea.addEventListener('dragover', function(e) {
+      e.preventDefault();
+    });
+    
+    dropArea.addEventListener('dragenter', function(e) {
+      e.preventDefault();
+    });
+    
     // Upload files to GitHub repository
-    function uploadFiles(fileList) {
-      var ul = document.getElementById('fileList');
-
-      // Loop through the files
-      for (var i = 0; i < fileList.length; i++) {
-        var file = fileList[i];
+    function uploadFiles(files) {
+      for (var i = 0; i < files.length; i++) {
+        var file = files[i];
+        
         if (file.type === 'application/zip' || file.type === 'application/x-rar-compressed') {
           var formData = new FormData();
           formData.append('file', file);
-
-          // Make API request to upload the file
+          
           axios.post('https://api.github.com/repos/' + repoOwner + '/' + repoName + '/contents/' + file.name, formData, {
             headers: {
-              Authorization: 'Bearer ' + accessToken,
-              'Content-Type': 'application/x-www-form-urlencoded'
+              'Content-Type': 'application/octet-stream',
+              'Authorization': 'Bearer ' + accessToken
             }
           })
           .then(function(response) {
-            var fileData = response.data;
-
-            // Create a link to the uploaded file
-            var li = document.createElement('li');
-            var link = document.createElement('a');
-            link.href = fileData.download_url;
-            link.textContent = fileData.name;
-            li.appendChild(link);
-            ul.appendChild(li);
+            var data = response.data;
+            
+            if (data.content) {
+              var li = document.createElement('li');
+              var link = document.createElement('a');
+              link.href = data.download_url;
+              link.textContent = data.name;
+              li.appendChild(link);
+              fileList.appendChild(li);
+            }
           })
           .catch(function(error) {
             console.error('Error uploading file:', error);
