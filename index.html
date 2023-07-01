@@ -104,24 +104,57 @@
           var content = e.target.result.split(',')[1];
           var fileName = file.name;
 
-          axios.put('https://api.github.com/repos/' + repoOwner + '/' + repoName + '/contents/' + fileName, {
-            content: content,
-            message: 'Upload ' + fileName,
-            branch: 'main'
-          }, {
+          var apiUrl = 'https://api.github.com/repos/' + repoOwner + '/' + repoName + '/contents/' + fileName;
+          var uploadUrl = 'https://api.github.com/repos/' + repoOwner + '/' + repoName + '/uploads';
+
+          axios.get(apiUrl, {
             headers: {
               Authorization: 'Bearer ' + accessToken
             }
           })
             .then(function(response) {
-              var li = document.createElement('li');
-              li.textContent = fileName + ' uploaded successfully';
-              ul.appendChild(li);
+              var sha = response.data.sha;
+
+              axios.put(apiUrl, {
+                message: 'Update ' + fileName,
+                content: content,
+                sha: sha,
+                branch: 'main'
+              }, {
+                headers: {
+                  Authorization: 'Bearer ' + accessToken
+                }
+              })
+                .then(function(response) {
+                  var li = document.createElement('li');
+                  li.textContent = fileName + ' uploaded successfully';
+                  ul.appendChild(li);
+                })
+                .catch(function(error) {
+                  var li = document.createElement('li');
+                  li.textContent = 'Error uploading ' + fileName;
+                  ul.appendChild(li);
+                });
             })
             .catch(function(error) {
-              var li = document.createElement('li');
-              li.textContent = 'Error uploading ' + fileName;
-              ul.appendChild(li);
+              axios.post(uploadUrl, {
+                name: fileName,
+                data: content
+              }, {
+                headers: {
+                  Authorization: 'Bearer ' + accessToken
+                }
+              })
+                .then(function(response) {
+                  var li = document.createElement('li');
+                  li.textContent = fileName + ' uploaded successfully';
+                  ul.appendChild(li);
+                })
+                .catch(function(error) {
+                  var li = document.createElement('li');
+                  li.textContent = 'Error uploading ' + fileName;
+                  ul.appendChild(li);
+                });
             });
         };
         reader.readAsDataURL(file);
