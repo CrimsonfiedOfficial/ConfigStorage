@@ -96,7 +96,6 @@
     // Upload files to GitHub repository
     function uploadFiles(files) {
       var ul = document.getElementById('fileList');
-      ul.innerHTML = '';
 
       Array.from(files).forEach(function(file) {
         var reader = new FileReader();
@@ -104,10 +103,9 @@
           var content = e.target.result.split(',')[1];
           var fileName = file.name;
 
-          var apiUrl = 'https://api.github.com/repos/' + repoOwner + '/' + repoName + '/contents/' + fileName;
-          var uploadUrl = 'https://api.github.com/repos/' + repoOwner + '/' + repoName + '/contents';
+          var uploadUrl = 'https://api.github.com/repos/' + repoOwner + '/' + repoName + '/contents/' + fileName;
 
-          axios.get(apiUrl, {
+          axios.get(uploadUrl, {
             headers: {
               Authorization: 'Bearer ' + accessToken
             }
@@ -115,7 +113,7 @@
             .then(function(response) {
               var sha = response.data.sha;
 
-              axios.put(apiUrl, {
+              axios.put(uploadUrl, {
                 message: 'Update ' + fileName,
                 content: content,
                 sha: sha,
@@ -127,8 +125,13 @@
               })
                 .then(function(response) {
                   var li = document.createElement('li');
-                  li.textContent = fileName + ' uploaded successfully';
+                  li.textContent = 'Successfully uploaded ' + fileName;
                   ul.appendChild(li);
+
+                  var fileLink = document.createElement('a');
+                  fileLink.href = response.data.html_url;
+                  fileLink.textContent = fileName;
+                  ul.appendChild(fileLink);
                 })
                 .catch(function(error) {
                   var li = document.createElement('li');
@@ -138,8 +141,9 @@
             })
             .catch(function(error) {
               axios.post(uploadUrl, {
-                name: fileName,
-                data: content
+                message: 'Upload ' + fileName,
+                content: content,
+                branch: 'main'
               }, {
                 headers: {
                   Authorization: 'Bearer ' + accessToken
@@ -147,8 +151,13 @@
               })
                 .then(function(response) {
                   var li = document.createElement('li');
-                  li.textContent = fileName + ' uploaded successfully';
+                  li.textContent = 'Successfully uploaded ' + fileName;
                   ul.appendChild(li);
+
+                  var fileLink = document.createElement('a');
+                  fileLink.href = response.data.html_url;
+                  fileLink.textContent = fileName;
+                  ul.appendChild(fileLink);
                 })
                 .catch(function(error) {
                   var li = document.createElement('li');
