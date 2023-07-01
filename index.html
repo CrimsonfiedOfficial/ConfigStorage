@@ -62,7 +62,7 @@
     var repoOwner = 'CrimsonfiedOfficial';
     var repoName = 'ConfigStorage';
     var accessToken = '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';
-    
+
     // Handle file upload
     var fileUpload = document.getElementById('fileUpload');
     fileUpload.addEventListener('dragover', handleDragOver);
@@ -96,30 +96,35 @@
     // Upload files to GitHub repository
     function uploadFiles(files) {
       var ul = document.getElementById('fileList');
+      ul.innerHTML = '';
 
       Array.from(files).forEach(function(file) {
-        var formData = new FormData();
-        formData.append('file', file);
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          var content = e.target.result.split(',')[1];
+          var fileName = file.name;
 
-        axios.put('https://api.github.com/repos/' + repoOwner + '/' + repoName + '/contents/' + file.name, {
-          content: btoa(file),
-          message: 'Upload ' + file.name,
-          branch: 'main'
-        }, {
-          headers: {
-            Authorization: 'Bearer ' + accessToken
-          }
-        })
-          .then(function(response) {
-            var li = document.createElement('li');
-            li.textContent = file.name + ' uploaded successfully';
-            ul.appendChild(li);
+          axios.put('https://api.github.com/repos/' + repoOwner + '/' + repoName + '/contents/' + fileName, {
+            content: content,
+            message: 'Upload ' + fileName,
+            branch: 'main'
+          }, {
+            headers: {
+              Authorization: 'Bearer ' + accessToken
+            }
           })
-          .catch(function(error) {
-            var li = document.createElement('li');
-            li.textContent = 'Error uploading ' + file.name;
-            ul.appendChild(li);
-          });
+            .then(function(response) {
+              var li = document.createElement('li');
+              li.textContent = fileName + ' uploaded successfully';
+              ul.appendChild(li);
+            })
+            .catch(function(error) {
+              var li = document.createElement('li');
+              li.textContent = 'Error uploading ' + fileName;
+              ul.appendChild(li);
+            });
+        };
+        reader.readAsDataURL(file);
       });
     }
   </script>
