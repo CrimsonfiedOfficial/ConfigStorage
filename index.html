@@ -105,7 +105,7 @@
           var fileName = file.name;
 
           var apiUrl = 'https://api.github.com/repos/' + repoOwner + '/' + repoName + '/contents/' + fileName;
-          var uploadUrl = 'https://api.github.com/repos/' + repoOwner + '/' + repoName + '/uploads';
+          var uploadUrl = 'https://api.github.com/repos/' + repoOwner + '/' + repoName + '/contents';
 
           axios.get(apiUrl, {
             headers: {
