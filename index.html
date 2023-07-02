@@ -2,6 +2,17 @@
 <html>
 <head>
   <title>Config Files</title>
+  <style>
+    .button {
+      display: inline-block;
+      padding: 8px 16px;
+      background-color: #3498db;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 4px;
+      margin: 4px;
+    }
+  </style>
 </head>
 <body>
   <h1>Config Files</h1>
@@ -21,6 +32,7 @@
             downloadButton.href = file.download_url;
             downloadButton.textContent = file.name;
             downloadButton.download = file.name;
+            downloadButton.classList.add('button');
 
             const listItem = document.createElement('div');
             listItem.appendChild(downloadButton);
