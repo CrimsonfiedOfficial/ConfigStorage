@@ -50,18 +50,7 @@
     }
 
     .pagination li {
-      margin-right: 4px;
-    }
-
-    .feedback-container {
-      display: flex;
-      justify-content: center;
-      margin-top: 16px;
-    }
-
-    .feedback-button {
       margin-right: 8px;
-      cursor: pointer;
     }
   </style>
 </head>
@@ -76,11 +65,6 @@
 
   <div class="pagination-container">
     <ul id="paginationContainer" class="pagination"></ul>
-  </div>
-
-  <div class="feedback-container">
-    <span class="feedback-button" onclick="sendFeedback('thumbs-up')">👍</span>
-    <span class="feedback-button" onclick="sendFeedback('thumbs-down')">👎</span>
   </div>
 
   <script>
@@ -123,8 +107,8 @@
             const nameB = b.name.toLowerCase();
 
             if (nameA < nameB) return -1;
-            if (nameA > nameB) return 1;
-            return 0;
+            if (nameA > nameB) return 0;
+            return 1;
           });
         };
 
@@ -143,13 +127,12 @@
             return;
           }
 
-          const paginationLinks = document.createElement('div');
+          const paginationLinks = document.createElement('ul');
           paginationLinks.classList.add('pagination');
 
           for (let i = 1; i <= totalPages; i++) {
-            const link = document.createElement('a');
+            const link = document.createElement('li');
             link.textContent = i;
-            link.href = '#';
             link.addEventListener('click', () => {
               currentPage = i;
               generateButtons(filteredFiles.slice((currentPage - 1) * perPage, currentPage * perPage));
@@ -183,12 +166,6 @@
         const fileList = document.getElementById('fileList');
         fileList.textContent = 'Error fetching file list. Please try again later.';
       });
-
-    // Feedback button click event handler
-    const sendFeedback = (feedbackType) => {
-      // Send feedback to your backend or analytics platform
-      console.log('Feedback:', feedbackType);
-    };
   </script>
 </body>
 </html>
