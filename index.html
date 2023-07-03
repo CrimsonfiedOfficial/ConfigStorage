@@ -3,6 +3,12 @@
 <head>
   <title>Configs</title>
   <style>
+    body {
+      background-color: #1f1f1f;
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }
+
     .button-container {
       display: flex;
       flex-wrap: wrap;
@@ -17,7 +23,7 @@
       text-decoration: none;
       border-radius: 4px;
     }
-    
+
     .search-container {
       margin-bottom: 16px;
     }
@@ -28,16 +34,28 @@
       border: 1px solid #ccc;
       width: 300px;
     }
-    
-    .pagination {
+
+    .pagination-container {
+      display: flex;
+      justify-content: center;
       margin-top: 16px;
     }
 
-    .pagination a {
+    .pagination {
+      display: flex;
+      align-items: center;
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .pagination li {
       margin-right: 4px;
     }
 
     .feedback-container {
+      display: flex;
+      justify-content: center;
       margin-top: 16px;
     }
 
@@ -56,7 +74,9 @@
 
   <div id="fileList"></div>
 
-  <div id="paginationContainer"></div>
+  <div class="pagination-container">
+    <ul id="paginationContainer" class="pagination"></ul>
+  </div>
 
   <div class="feedback-container">
     <span class="feedback-button" onclick="sendFeedback('thumbs-up')">👍</span>
@@ -70,7 +90,7 @@
       .then(data => {
         const fileList = document.getElementById('fileList');
         const paginationContainer = document.getElementById('paginationContainer');
-        const perPage = 40;
+        const perPage = 130;
 
         let currentPage = 1;
         let filteredFiles = [];
@@ -102,30 +122,18 @@
             const nameA = a.name.toLowerCase();
             const nameB = b.name.toLowerCase();
 
-            if (nameA < nameB) {
-              return -1;
-            }
-
-            if (nameA > nameB) {
-              return 1;
-            }
-
+            if (nameA < nameB) return -1;
+            if (nameA > nameB) return 1;
             return 0;
           });
         };
 
         // Filter files based on search value
         const filterFiles = (searchValue) => {
-          const filtered = data.filter(file => {
-            const fileName = file.name.toLowerCase();
-            return fileName.includes(searchValue);
-          });
-
-          filteredFiles = sortFiles(filtered);
-          generateButtons(filteredFiles.slice((currentPage - 1) * perPage, currentPage * perPage));
+          filteredFiles = data.filter(file => file.name.toLowerCase().includes(searchValue));
         };
 
-        // Update pagination links
+        // Generate pagination links
         const updatePagination = () => {
           paginationContainer.innerHTML = '';
 
