@@ -24,6 +24,22 @@
       border-radius: 4px;
     }
 
+    .pagination-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 16px;
+    }
+
+    .page-button {
+      margin: 0 4px;
+      padding: 4px 8px;
+      background-color: #3498db;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
     .search-container {
       margin-bottom: 16px;
     }
@@ -35,22 +51,19 @@
       width: 300px;
     }
 
-    .pagination-container {
-      display: flex;
-      justify-content: center;
-      margin-top: 16px;
+    .search-button {
+      padding: 8px 16px;
+      background-color: #3498db;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
     }
 
-    .pagination {
-      display: flex;
-      align-items: center;
-      list-style-type: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    .pagination li {
-      margin-right: 8px;
+    .download-counter {
+      text-align: center;
+      margin-top: 24px;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -59,38 +72,48 @@
 
   <div class="search-container">
     <input type="text" id="searchInput" class="search-input" placeholder="Search configs...">
+    <button id="searchButton" class="search-button">Search</button>
   </div>
 
   <div id="fileList"></div>
+  <div id="pagination"></div>
 
-  <div class="pagination-container">
-    <ul id="paginationContainer" class="pagination"></ul>
-  </div>
+  <div class="download-counter">Total Downloads: <span id="downloadCounter">0</span></div>
 
   <script>
+    let totalDownloads = 0;
+    const downloadCounter = document.getElementById('downloadCounter');
+
     // Fetch the file list from GitHub API
     fetch('https://api.github.com/repos/CrimsonfiedOfficial/ConfigStorage/contents')
       .then(response => response.json())
       .then(data => {
         const fileList = document.getElementById('fileList');
-        const paginationContainer = document.getElementById('paginationContainer');
-        const perPage = 130;
-
+        const paginationContainer = document.getElementById('pagination');
+        const searchInput = document.getElementById('searchInput');
+        const searchButton = document.getElementById('searchButton');
+        const filesPerPage = 130;
         let currentPage = 1;
-        let filteredFiles = [];
 
-        // Generate download buttons for each file
         const generateButtons = (files) => {
+          const startIndex = (currentPage - 1) * filesPerPage;
+          const endIndex = startIndex + filesPerPage;
+          const filesToShow = files.slice(startIndex, endIndex);
+
           const buttonContainer = document.createElement('div');
           buttonContainer.classList.add('button-container');
 
-          files.forEach(file => {
+          filesToShow.forEach(file => {
             if (['zip', 'rar'].includes(file.name.split('.').pop())) {
               const downloadButton = document.createElement('a');
               downloadButton.href = file.download_url;
               downloadButton.textContent = file.name;
               downloadButton.download = file.name;
               downloadButton.classList.add('button');
+              downloadButton.addEventListener('click', () => {
+                totalDownloads++;
+                downloadCounter.textContent = totalDownloads;
+              });
 
               buttonContainer.appendChild(downloadButton);
             }
@@ -100,66 +123,46 @@
           fileList.appendChild(buttonContainer);
         };
 
-        // Sort files alphabetically
-        const sortFiles = (files) => {
-          return files.sort((a, b) => {
-            const nameA = a.name.toLowerCase();
-            const nameB = b.name.toLowerCase();
+        const generatePagination = (files) => {
+          const totalPages = Math.ceil(files.length / filesPerPage);
 
-            if (nameA < nameB) return -1;
-            if (nameA > nameB) return 0;
-            return 1;
-          });
-        };
-
-        // Filter files based on search value
-        const filterFiles = (searchValue) => {
-          filteredFiles = data.filter(file => file.name.toLowerCase().includes(searchValue));
-        };
-
-        // Generate pagination links
-        const updatePagination = () => {
+          const paginationContainer = document.getElementById('pagination');
           paginationContainer.innerHTML = '';
 
-          const totalPages = Math.ceil(filteredFiles.length / perPage);
-
-          if (totalPages <= 1) {
-            return;
-          }
-
-          const paginationLinks = document.createElement('ul');
-          paginationLinks.classList.add('pagination');
-
           for (let i = 1; i <= totalPages; i++) {
-            const link = document.createElement('li');
-            link.textContent = i;
-            link.addEventListener('click', () => {
+            const pageButton = document.createElement('a');
+            pageButton.href = '#';
+            pageButton.textContent = i;
+            pageButton.classList.add('page-button');
+
+            if (i === currentPage) {
+              pageButton.classList.add('active');
+            }
+
+            pageButton.addEventListener('click', () => {
               currentPage = i;
-              generateButtons(filteredFiles.slice((currentPage - 1) * perPage, currentPage * perPage));
-              updatePagination();
+              generateButtons(files);
+              generatePagination(files);
             });
 
-            paginationLinks.appendChild(link);
+            paginationContainer.appendChild(pageButton);
           }
-
-          paginationContainer.appendChild(paginationLinks);
         };
 
-        // Search functionality
-        const searchInput = document.getElementById('searchInput');
-
-        searchInput.addEventListener('input', () => {
-          const searchValue = searchInput.value.toLowerCase();
-
-          filterFiles(searchValue);
+        const filterFiles = (searchValue) => {
+          const filteredFiles = data.filter(file => file.name.toLowerCase().includes(searchValue.toLowerCase()));
           currentPage = 1;
-          updatePagination();
+          generateButtons(filteredFiles);
+          generatePagination(filteredFiles);
+        };
+
+        searchButton.addEventListener('click', () => {
+          const searchValue = searchInput.value;
+          filterFiles(searchValue);
         });
 
-        // Initial generation and pagination setup
-        filteredFiles = sortFiles(data);
-        generateButtons(filteredFiles.slice(0, perPage));
-        updatePagination();
+        generateButtons(data);
+        generatePagination(data);
       })
       .catch(error => {
         console.error('Error fetching file list:', error);
