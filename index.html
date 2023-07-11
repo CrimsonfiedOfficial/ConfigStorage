@@ -18,6 +18,35 @@
       text-align: center;
     }
 
+    .tab-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .tab {
+      padding: 8px 16px;
+      background-color: #3498db;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 4px;
+      margin-right: 8px;
+      cursor: pointer;
+    }
+
+    .tab.active {
+      background-color: #fff;
+      color: #3498db;
+    }
+
+    .content {
+      display: none;
+    }
+
+    .content.active {
+      display: block;
+    }
+
     .button-container {
       display: flex;
       flex-wrap: wrap;
@@ -34,131 +63,87 @@
       text-decoration: none;
       border-radius: 4px;
     }
-
-    .page-buttons {
-      margin-top: auto;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-
-    .page-buttons button {
-      margin: 0 5px;
-      padding: 4px 8px;
-      background-color: #3498db;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    .search-container {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 20px;
-    }
-
-    .search-input {
-      padding: 8px;
-      border-radius: 4px;
-      border: none;
-      font-size: 14px;
-      margin-right: 8px;
-    }
-
-    .search-button {
-      padding: 8px 16px;
-      background-color: #3498db;
-      color: #fff;
-      text-decoration: none;
-      border-radius: 4px;
-      border: none;
-      cursor: pointer;
-    }
   </style>
 </head>
 <body>
   <h1>Configs</h1>
 
-  <div class="search-container">
-    <input type="text" id="searchInput" class="search-input" placeholder="Search...">
-    <button id="searchButton" class="search-button">Search</button>
+  <div class="tab-container">
+    <a class="tab active" data-target="snoopy">Snoopy</a>
+    <a class="tab" data-target="acronis">Acronis</a>
+    <a class="tab" data-target="primeware">primeware</a>
+    <a class="tab" data-target="animeware">animeware</a>
   </div>
 
-  <div id="fileList"></div>
+  <div class="content active" id="snoopy">
+    <div id="snoopyFiles" class="button-container"></div>
+  </div>
 
-  <div class="page-buttons">
-    <button onclick="changePage(-1)">Previous</button>
-    <button onclick="changePage(1)">Next</button>
+  <div class="content" id="acronis">
+    <div id="acronisFiles" class="button-container"></div>
+  </div>
+
+  <div class="content" id="primeware">
+    <div id="primewareFiles" class="button-container"></div>
+  </div>
+
+  <div class="content" id="animeware">
+    <div id="animewareFiles" class="button-container"></div>
   </div>
 
   <script>
-    const filesPerPage = 130;
-    let currentPage = 1;
-    let filteredFiles = [];
+    const tabs = document.querySelectorAll('.tab');
+    const contents = document.querySelectorAll('.content');
 
-    function displayFiles(files) {
-      const fileList = document.getElementById('fileList');
-      fileList.innerHTML = '';
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const target = tab.getAttribute('data-target');
 
-      const startIndex = (currentPage - 1) * filesPerPage;
-      const endIndex = currentPage * filesPerPage;
+        tabs.forEach(t => t.classList.remove('active'));
+        contents.forEach(content => content.classList.remove('active'));
 
-      const buttonContainer = document.createElement('div');
-      buttonContainer.classList.add('button-container');
-
-      for (let i = startIndex; i < endIndex && i < files.length; i++) {
-        const file = files[i];
-
-        const downloadButton = document.createElement('a');
-        downloadButton.href = file.download_url;
-        downloadButton.textContent = file.name;
-        downloadButton.download = file.name;
-        downloadButton.classList.add('button');
-
-        buttonContainer.appendChild(downloadButton);
-      }
-
-      fileList.appendChild(buttonContainer);
-    }
-
-    function changePage(page) {
-      currentPage += page;
-      currentPage = Math.max(1, currentPage);
-
-      displayFiles(filteredFiles);
-    }
-
-    function searchFiles() {
-      const searchInput = document.getElementById('searchInput').value.toLowerCase();
-      filteredFiles = [];
-
-      if (searchInput === '') {
-        filteredFiles = files;
-      } else {
-        filteredFiles = files.filter(file => file.name.toLowerCase().includes(searchInput));
-      }
-
-      currentPage = 1;
-      displayFiles(filteredFiles);
-    }
-
-    document.getElementById('searchButton').addEventListener('click', searchFiles);
-
-    fetch('https://api.github.com/repos/CrimsonfiedOfficial/ConfigStorage/contents')
-      .then(response => response.json())
-      .then(data => {
-        files = data.filter(file => file.type === 'file' && (file.name.endsWith('.zip') || file.name.endsWith('.rar')));
-
-        filteredFiles = files;
-        displayFiles(filteredFiles);
-      })
-      .catch(error => {
-        console.error('Error fetching file list:', error);
-        const fileList = document.getElementById('fileList');
-        fileList.textContent = 'Error fetching file list. Please try again later.';
+        tab.classList.add('active');
+        document.getElementById(target).classList.add('active');
       });
+    });
+
+    const repoOwner = 'CrimsonfiedOfficial';
+    const repoName = 'ConfigStorage';
+
+    function displayFiles(folder, containerId) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+
+      fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/contents/${folder}`)
+        .then(response => response.json())
+        .then(data => {
+          const buttonContainer = document.createElement('div');
+          buttonContainer.classList.add('button-container');
+
+          data.forEach(file => {
+            if (file.type === 'file') {
+              const downloadButton = document.createElement('a');
+              downloadButton.href = file.download_url;
+              downloadButton.textContent = file.name;
+              downloadButton.download = file.name;
+              downloadButton.classList.add('button');
+
+              buttonContainer.appendChild(downloadButton);
+            }
+          });
+
+          container.appendChild(buttonContainer);
+        })
+        .catch(error => {
+          console.error('Error fetching file list:', error);
+          container.textContent = 'Error fetching file list. Please try again later.';
+        });
+    }
+
+    displayFiles('snoopy', 'snoopyFiles');
+    displayFiles('acronis', 'acronisFiles');
+    displayFiles('primeware', 'primewareFiles');
+    displayFiles('animeware', 'animewareFiles');
   </script>
 </body>
 </html>
