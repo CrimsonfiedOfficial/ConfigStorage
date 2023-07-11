@@ -9,38 +9,43 @@
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
     }
 
     h1 {
       text-align: center;
+      margin-top: 20px;
     }
 
     .tab-container {
       display: flex;
       justify-content: center;
-      margin-bottom: 20px;
+      background-color: #333;
+      padding: 10px 0;
     }
 
     .tab {
-      padding: 8px 16px;
-      background-color: #3498db;
+      padding: 10px 20px;
+      background-color: #444;
       color: #fff;
       text-decoration: none;
-      border-radius: 4px;
-      margin-right: 8px;
+      border-radius: 4px 4px 0 0;
+      margin-right: 10px;
       cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .tab:hover {
+      background-color: #555;
     }
 
     .tab.active {
       background-color: #fff;
-      color: #3498db;
+      color: #333;
     }
 
     .content {
       display: none;
+      padding: 20px;
     }
 
     .content.active {
@@ -69,13 +74,18 @@
   <h1>Configs</h1>
 
   <div class="tab-container">
-    <a class="tab active" data-target="snoopy">Snoopy</a>
+    <a class="tab active" data-target="all">All</a>
+    <a class="tab" data-target="snoopy">Snoopy</a>
     <a class="tab" data-target="acronis">Acronis</a>
     <a class="tab" data-target="primeware">primeware</a>
     <a class="tab" data-target="animeware">animeware</a>
   </div>
 
-  <div class="content active" id="snoopy">
+  <div class="content active" id="all">
+    <div id="allFiles" class="button-container"></div>
+  </div>
+
+  <div class="content" id="snoopy">
     <div id="snoopyFiles" class="button-container"></div>
   </div>
 
@@ -140,6 +150,7 @@
         });
     }
 
+    displayFiles('', 'allFiles');
     displayFiles('snoopy', 'snoopyFiles');
     displayFiles('acronis', 'acronisFiles');
     displayFiles('primeware', 'primewareFiles');
