@@ -55,7 +55,8 @@
 </head>
 <body>
   <div class="tab-container">
-    <button class="tab active" onclick="showTab('snoopy')">Snoopy</button>
+    <button class="tab active" onclick="showTab('all')">All</button>
+    <button class="tab" onclick="showTab('snoopy')">Snoopy</button>
     <button class="tab" onclick="showTab('acronis')">Acronis</button>
     <button class="tab" onclick="showTab('primeware')">Primeware</button>
     <button class="tab" onclick="showTab('animeware')">Animeware</button>
@@ -72,11 +73,12 @@
 
     // Object to map folder names to their respective tab buttons
     const folderToTab = {
-      snoopy: tabButtons[0],
-      acronis: tabButtons[1],
-      primeware: tabButtons[2],
-      animeware: tabButtons[3],
-      ape: tabButtons[4]
+      all: tabButtons[0],
+      snoopy: tabButtons[1],
+      acronis: tabButtons[2],
+      primeware: tabButtons[3],
+      animeware: tabButtons[4],
+      ape: tabButtons[5]
     };
 
     // Function to show files based on the selected tab
@@ -86,7 +88,14 @@
       folderToTab[folderName].classList.add('active');
 
       // Fetch files based on the selected folder
-      fetch(`https://api.github.com/repos/CrimsonfiedOfficial/ConfigStorage/contents/${folderName}`)
+      let folderUrl = '';
+      if (folderName === 'all') {
+        folderUrl = '';
+      } else {
+        folderUrl = `${folderName}/`;
+      }
+
+      fetch(`https://api.github.com/repos/CrimsonfiedOfficial/ConfigStorage/contents/${folderUrl}`)
         .then(response => response.json())
         .then(data => {
           const files = data.filter(file => file.type === 'file' && (file.name.endsWith('.zip') || file.name.endsWith('.rar')));
@@ -115,7 +124,7 @@
     }
 
     // Show the initial tab
-    showTab('snoopy');
+    showTab('all');
   </script>
 </body>
 </html>
