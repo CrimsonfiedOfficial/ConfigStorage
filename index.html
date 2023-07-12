@@ -1,130 +1,159 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Configs</title>
-  <style>
-    body {
-      background-color: #000;
-      color: #fff;
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-    }
+    <title>Prime Leaks</title>
+    <style>
+        body {
+            background-color: #1f1f1f;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
 
-    .tab-container {
-      display: flex;
-      justify-content: center;
-      margin-top: 20px;
-    }
+        h1 {
+            color: #ff4d4d;
+        }
 
-    .tab {
-      padding: 8px 16px;
-      background-color: #3498db;
-      color: #fff;
-      text-decoration: none;
-      border-radius: 4px;
-      margin-right: 8px;
-      cursor: pointer;
-    }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
 
-    .tab.active {
-      background-color: #fff;
-      color: #000;
-    }
+        .tab-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
 
-    .file-list {
-      margin-top: 20px;
-    }
+        .tab-links {
+            display: flex;
+        }
 
-    .file-list .button-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: center;
-    }
+        .tab-link {
+            color: #fff;
+            text-decoration: none;
+            padding: 10px;
+            background-color: #ff4d4d;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
 
-    .file-list .button {
-      display: inline-block;
-      padding: 8px 16px;
-      background-color: #3498db;
-      color: #fff;
-      text-decoration: none;
-      border-radius: 4px;
-    }
-  </style>
+        .tab-content {
+            display: none;
+            background-color: #2b2b2b;
+            padding: 20px;
+            border-radius: 0 5px 5px 5px;
+        }
+
+        .visible {
+            display: block;
+        }
+
+        .file-list {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0;
+            padding: 0;
+            list-style-type: none;
+        }
+
+        .file-item {
+            width: calc(33.33% - 10px);
+            margin-bottom: 20px;
+            background-color: #323232;
+            border-radius: 5px;
+            padding: 10px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .file-link {
+            color: #ff4d4d;
+            text-decoration: none;
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
 </head>
 <body>
-  <div class="tab-container">
-    <button class="tab active" onclick="showTab('all')">All</button>
-    <button class="tab" onclick="showTab('snoopy')">Snoopy</button>
-    <button class="tab" onclick="showTab('acronis')">Acronis</button>
-    <button class="tab" onclick="showTab('primeware')">Primeware</button>
-    <button class="tab" onclick="showTab('animeware')">Animeware</button>
-    <button class="tab" onclick="showTab('ape')">APE</button>
-  </div>
+    <div class="container">
+        <h1>Welcome to Prime Leaks</h1>
+        <div class="tab-container">
+            <div class="tab-links">
+                <a href="#" class="tab-link visible" data-tab="all-tab">All</a>
+                <a href="#" class="tab-link" data-tab="snoopy-tab">Snoopy</a>
+                <a href="#" class="tab-link" data-tab="acronis-tab">Acronis</a>
+                <a href="#" class="tab-link" data-tab="primeware-tab">Primeware</a>
+                <a href="#" class="tab-link" data-tab="animeware-tab">Animeware</a>
+                <a href="#" class="tab-link" data-tab="ape-tab">APE</a>
+            </div>
+        </div>
+        <div class="tab-content visible" id="all-tab">
+            <p>Click on the links below to download the configs:</p>
+            <ul class="file-list" id="fileList"></ul>
+        </div>
+        <div class="tab-content" id="snoopy-tab">
+            <p>Snoopy files go here</p>
+        </div>
+        <div class="tab-content" id="acronis-tab">
+            <p>Acronis files go here</p>
+        </div>
+        <div class="tab-content" id="primeware-tab">
+            <p>Primeware files go here</p>
+        </div>
+        <div class="tab-content" id="animeware-tab">
+            <p>Animeware files go here</p>
+        </div>
+        <div class="tab-content" id="ape-tab">
+            <p>APE files go here</p>
+        </div>
+    </div>
 
-  <div class="file-list" id="fileList">
-    <!-- Files will be dynamically populated here -->
-  </div>
+    <script>
+        const tabLinks = document.querySelectorAll('.tab-link');
+        const tabContents = document.querySelectorAll('.tab-content');
 
-  <script>
-    const tabButtons = document.querySelectorAll('.tab');
-    const fileList = document.getElementById('fileList');
+        tabLinks.forEach(tabLink => {
+            tabLink.addEventListener('click', (event) => {
+                event.preventDefault();
 
-    // Object to map folder names to their respective tab buttons
-    const folderToTab = {
-      all: tabButtons[0],
-      snoopy: tabButtons[1],
-      acronis: tabButtons[2],
-      primeware: tabButtons[3],
-      animeware: tabButtons[4],
-      ape: tabButtons[5]
-    };
+                const selectedTab = event.target.dataset.tab;
 
-    // Function to show files based on the selected tab
-    function showTab(folderName) {
-      // Set the selected tab as active
-      tabButtons.forEach(tab => tab.classList.remove('active'));
-      folderToTab[folderName].classList.add('active');
+                tabContents.forEach(tabContent => {
+                    tabContent.classList.remove('visible');
+                });
 
-      // Fetch files based on the selected folder
-      let folderUrl = '';
-      if (folderName === 'all') {
-        folderUrl = '';
-      } else {
-        folderUrl = `${folderName}/`;
-      }
-
-      fetch(`https://api.github.com/repos/CrimsonfiedOfficial/ConfigStorage/contents/${folderUrl}`)
-        .then(response => response.json())
-        .then(data => {
-          const files = data.filter(file => file.type === 'file' && (file.name.endsWith('.zip') || file.name.endsWith('.rar')));
-
-          const buttonContainer = document.createElement('div');
-          buttonContainer.classList.add('button-container');
-
-          files.forEach(file => {
-            const downloadButton = document.createElement('a');
-            downloadButton.href = file.download_url;
-            downloadButton.textContent = file.name;
-            downloadButton.download = file.name;
-            downloadButton.classList.add('button');
-
-            buttonContainer.appendChild(downloadButton);
-          });
-
-          // Clear previous files and append new files to the file list
-          fileList.innerHTML = '';
-          fileList.appendChild(buttonContainer);
-        })
-        .catch(error => {
-          console.error('Error fetching file list:', error);
-          fileList.textContent = 'Error fetching file list. Please try again later.';
+                document.getElementById(selectedTab).classList.add('visible');
+            });
         });
-    }
 
-    // Show the initial tab
-    showTab('all');
-  </script>
+        fetch('https://api.github.com/repos/CrimsonfiedOfficial/ConfigStorage/contents')
+            .then(response => response.json())
+            .then(data => {
+                const fileList = document.getElementById('fileList');
+
+                data.forEach(file => {
+                    if (file.type === 'file' && (file.name.endsWith('.zip') || file.name.endsWith('.rar'))) {
+                        const listItem = document.createElement('li');
+                        const fileItem = document.createElement('div');
+                        const link = document.createElement('a');
+                        fileItem.classList.add('file-item');
+                        link.classList.add('file-link');
+                        link.href = file.download_url;
+                        link.textContent = file.name;
+                        fileItem.appendChild(link);
+                        listItem.appendChild(fileItem);
+                        fileList.appendChild(listItem);
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching file list:', error);
+                const fileList = document.getElementById('fileList');
+                fileList.textContent = 'Error fetching file list. Please try again later.';
+            });
+    </script>
 </body>
 </html>
