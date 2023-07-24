@@ -13,28 +13,22 @@
 
     .file-list {
       margin-top: 20px;
+    }
+
+    .file-list .button-container {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 8px;
       justify-content: center;
     }
 
-    .file-item {
-      width: calc(33.33% - 20px);
-      background-color: #323232;
-      border-radius: 5px;
-      padding: 10px;
-      text-align: center;
-      box-sizing: border-box;
-    }
-
-    .file-link {
-      color: #ff4d4d;
+    .file-list .button {
+      display: inline-block;
+      padding: 8px 16px;
+      background-color: #3498db;
+      color: #fff;
       text-decoration: none;
-      font-weight: bold;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      border-radius: 4px;
     }
 
     .pagination {
@@ -43,17 +37,17 @@
       margin-top: 20px;
     }
 
-    .page-number {
-      padding: 5px 10px;
+    .page-button {
+      padding: 8px 16px;
       background-color: #3498db;
       color: #fff;
       text-decoration: none;
       border-radius: 4px;
-      margin: 0 5px;
       cursor: pointer;
+      margin: 0 4px;
     }
 
-    .active {
+    .page-button.active {
       background-color: #fff;
       color: #000;
     }
@@ -61,24 +55,23 @@
     .search-container {
       display: flex;
       justify-content: center;
-      margin-bottom: 20px;
+      margin-top: 20px;
     }
 
     .search-input {
       padding: 8px;
-      border-radius: 4px;
-      border: none;
-      font-size: 14px;
-      margin-right: 8px;
+      border: 1px solid #fff;
+      border-radius: 4px 0 0 4px;
+      background-color: transparent;
+      color: #fff;
     }
 
     .search-button {
       padding: 8px 16px;
       background-color: #3498db;
       color: #fff;
-      text-decoration: none;
-      border-radius: 4px;
-      border: none;
+      border: 1px solid #fff;
+      border-radius: 0 4px 4px 0;
       cursor: pointer;
     }
   </style>
@@ -98,57 +91,65 @@
   </div>
 
   <script>
-    const filesPerPage = 9;
+    const filesPerPage = 36;
     let currentPage = 1;
+    let files = [];
     let filteredFiles = [];
 
-    const fileList = document.getElementById('fileList');
-    const pagination = document.getElementById('pagination');
+    function displayFiles(filesToDisplay) {
+      const startIndex = (currentPage - 1) * filesPerPage;
+      const endIndex = startIndex + filesPerPage;
+      const filesToShow = filesToDisplay.slice(startIndex, endIndex);
 
-    function displayFiles(files) {
+      const fileList = document.getElementById('fileList');
       fileList.innerHTML = '';
 
-      const startIndex = (currentPage - 1) * filesPerPage;
-      const endIndex = currentPage * filesPerPage;
+      const buttonContainer = document.createElement('div');
+      buttonContainer.classList.add('button-container');
 
-      for (let i = startIndex; i < endIndex && i < files.length; i++) {
-        const file = files[i];
+      filesToShow.forEach(file => {
+        const downloadButton = document.createElement('a');
+        downloadButton.href = file.download_url;
+        downloadButton.textContent = file.name;
+        downloadButton.download = file.name;
+        downloadButton.classList.add('button');
 
-        const listItem = document.createElement('div');
-        listItem.classList.add('file-item');
+        buttonContainer.appendChild(downloadButton);
+      });
 
-        const link = document.createElement('a');
-        link.classList.add('file-link');
-        link.href = file.download_url;
-        link.textContent = file.name;
-
-        listItem.appendChild(link);
-        fileList.appendChild(listItem);
-      }
+      fileList.appendChild(buttonContainer);
     }
 
     function changePage(page) {
-      currentPage += page;
-      currentPage = Math.max(1, currentPage);
+      if (page < 1 || page > Math.ceil(filteredFiles.length / filesPerPage)) {
+        return;
+      }
 
+      currentPage = page;
       displayFiles(filteredFiles);
       updatePagination();
     }
 
     function updatePagination() {
-      const totalPages = Math.ceil(filteredFiles.length / filesPerPage);
+      const totalFiles = filteredFiles.length;
+      const totalPages = Math.ceil(totalFiles / filesPerPage);
+
+      const pagination = document.getElementById('pagination');
       pagination.innerHTML = '';
 
       for (let i = 1; i <= totalPages; i++) {
-        const pageButton = document.createElement('a');
-        pageButton.classList.add('page-number');
+        const pageButton = document.createElement('button');
         pageButton.textContent = i;
-        pageButton.addEventListener('click', () => changePage(i - currentPage));
+        pageButton.classList.add('page-button');
+
+        if (i === currentPage) {
+          pageButton.classList.add('active');
+        } else {
+          pageButton.addEventListener('click', () => changePage(i));
+        }
+
         pagination.appendChild(pageButton);
       }
-
-      const activeButton = pagination.children[currentPage - 1];
-      activeButton.classList.add('active');
     }
 
     function searchFiles() {
@@ -168,17 +169,20 @@
 
     document.getElementById('searchButton').addEventListener('click', searchFiles);
 
+    // Adding an event listener to the search input to trigger the search on keyup
+    document.getElementById('searchInput').addEventListener('keyup', searchFiles);
+
     fetch('https://api.github.com/repos/CrimsonfiedOfficial/ConfigStorage/contents')
       .then(response => response.json())
       .then(data => {
-        const files = data.filter(file => file.type === 'file' && (file.name.endsWith('.zip') || file.name.endsWith('.rar')));
-
-        filteredFiles = files;
+        files = data.filter(file => file.type === 'file' && (file.name.endsWith('.zip') || file.name.endsWith('.rar')));
+        filteredFiles = [...files];
         displayFiles(filteredFiles);
         updatePagination();
       })
       .catch(error => {
         console.error('Error fetching file list:', error);
+        const fileList = document.getElementById('fileList');
         fileList.textContent = 'Error fetching file list. Please try again later.';
       });
   </script>
