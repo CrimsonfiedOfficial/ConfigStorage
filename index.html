@@ -13,55 +13,172 @@
 
     .file-list {
       margin-top: 20px;
-    }
-
-    .file-list .button-container {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 10px;
       justify-content: center;
     }
 
-    .file-list .button {
-      display: inline-block;
+    .file-item {
+      width: calc(33.33% - 20px);
+      background-color: #323232;
+      border-radius: 5px;
+      padding: 10px;
+      text-align: center;
+      box-sizing: border-box;
+    }
+
+    .file-link {
+      color: #ff4d4d;
+      text-decoration: none;
+      font-weight: bold;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .page-number {
+      padding: 5px 10px;
+      background-color: #3498db;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 4px;
+      margin: 0 5px;
+      cursor: pointer;
+    }
+
+    .active {
+      background-color: #fff;
+      color: #000;
+    }
+
+    .search-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .search-input {
+      padding: 8px;
+      border-radius: 4px;
+      border: none;
+      font-size: 14px;
+      margin-right: 8px;
+    }
+
+    .search-button {
       padding: 8px 16px;
       background-color: #3498db;
       color: #fff;
       text-decoration: none;
       border-radius: 4px;
+      border: none;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
+  <div class="search-container">
+    <input type="text" id="searchInput" class="search-input" placeholder="Search...">
+    <button id="searchButton" class="search-button">Search</button>
+  </div>
+
   <div class="file-list" id="fileList">
     <!-- Files will be dynamically populated here -->
   </div>
 
+  <div class="pagination" id="pagination">
+    <!-- Pagination buttons will be dynamically populated here -->
+  </div>
+
   <script>
+    const filesPerPage = 9;
+    let currentPage = 1;
+    let filteredFiles = [];
+
+    const fileList = document.getElementById('fileList');
+    const pagination = document.getElementById('pagination');
+
+    function displayFiles(files) {
+      fileList.innerHTML = '';
+
+      const startIndex = (currentPage - 1) * filesPerPage;
+      const endIndex = currentPage * filesPerPage;
+
+      for (let i = startIndex; i < endIndex && i < files.length; i++) {
+        const file = files[i];
+
+        const listItem = document.createElement('div');
+        listItem.classList.add('file-item');
+
+        const link = document.createElement('a');
+        link.classList.add('file-link');
+        link.href = file.download_url;
+        link.textContent = file.name;
+
+        listItem.appendChild(link);
+        fileList.appendChild(listItem);
+      }
+    }
+
+    function changePage(page) {
+      currentPage += page;
+      currentPage = Math.max(1, currentPage);
+
+      displayFiles(filteredFiles);
+      updatePagination();
+    }
+
+    function updatePagination() {
+      const totalPages = Math.ceil(filteredFiles.length / filesPerPage);
+      pagination.innerHTML = '';
+
+      for (let i = 1; i <= totalPages; i++) {
+        const pageButton = document.createElement('a');
+        pageButton.classList.add('page-number');
+        pageButton.textContent = i;
+        pageButton.addEventListener('click', () => changePage(i - currentPage));
+        pagination.appendChild(pageButton);
+      }
+
+      const activeButton = pagination.children[currentPage - 1];
+      activeButton.classList.add('active');
+    }
+
+    function searchFiles() {
+      const searchInput = document.getElementById('searchInput').value.toLowerCase();
+      filteredFiles = [];
+
+      if (searchInput === '') {
+        filteredFiles = files;
+      } else {
+        filteredFiles = files.filter(file => file.name.toLowerCase().includes(searchInput));
+      }
+
+      currentPage = 1;
+      displayFiles(filteredFiles);
+      updatePagination();
+    }
+
+    document.getElementById('searchButton').addEventListener('click', searchFiles);
+
     fetch('https://api.github.com/repos/CrimsonfiedOfficial/ConfigStorage/contents')
       .then(response => response.json())
       .then(data => {
-        const fileList = document.getElementById('fileList');
+        const files = data.filter(file => file.type === 'file' && (file.name.endsWith('.zip') || file.name.endsWith('.rar')));
 
-        data.forEach(file => {
-          if (file.type === 'file' && (file.name.endsWith('.zip') || file.name.endsWith('.rar'))) {
-            const buttonContainer = document.createElement('div');
-            buttonContainer.classList.add('button-container');
-
-            const downloadButton = document.createElement('a');
-            downloadButton.href = file.download_url;
-            downloadButton.textContent = file.name;
-            downloadButton.download = file.name;
-            downloadButton.classList.add('button');
-
-            buttonContainer.appendChild(downloadButton);
-            fileList.appendChild(buttonContainer);
-          }
-        });
+        filteredFiles = files;
+        displayFiles(filteredFiles);
+        updatePagination();
       })
       .catch(error => {
         console.error('Error fetching file list:', error);
-        const fileList = document.getElementById('fileList');
         fileList.textContent = 'Error fetching file list. Please try again later.';
       });
   </script>
