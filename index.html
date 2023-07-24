@@ -150,9 +150,9 @@
     function searchFiles() {
       const searchInput = document.getElementById('searchInput').value.toLowerCase();
       if (!searchInput) {
-        filesData = data.filter(file => file.type === 'file' && (file.name.endsWith('.zip') || file.name.endsWith('.rar')));
+        filesData = filesData.filter(file => file.name.endsWith('.zip') || file.name.endsWith('.rar'));
       } else {
-        filesData = data.filter(file => file.type === 'file' && (file.name.endsWith('.zip') || file.name.endsWith('.rar')) && file.name.toLowerCase().includes(searchInput));
+        filesData = filesData.filter(file => file.name.toLowerCase().includes(searchInput));
       }
       currentPage = 1;
       updateFileList();
