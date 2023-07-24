@@ -25,7 +25,7 @@
     .file-list .button {
       display: inline-block;
       padding: 8px 16px;
-      background-color: #3498db;
+      background-color: #ff4d4d;
       color: #fff;
       text-decoration: none;
       border-radius: 4px;
@@ -47,11 +47,6 @@
       margin: 0 4px;
     }
 
-    .page-button.active {
-      background-color: #fff;
-      color: #000;
-    }
-
     .search-container {
       display: flex;
       justify-content: center;
@@ -61,25 +56,27 @@
     .search-input {
       padding: 8px;
       border: 1px solid #fff;
-      border-radius: 4px 0 0 4px;
-      background-color: transparent;
+      border-radius: 4px;
+      background-color: #2b2b2b;
       color: #fff;
+      width: 300px;
+      margin-right: 8px;
     }
 
     .search-button {
       padding: 8px 16px;
-      background-color: #3498db;
+      background-color: #ff4d4d;
       color: #fff;
-      border: 1px solid #fff;
-      border-radius: 0 4px 4px 0;
+      text-decoration: none;
+      border-radius: 4px;
       cursor: pointer;
     }
   </style>
 </head>
 <body>
   <div class="search-container">
-    <input type="text" id="searchInput" class="search-input" placeholder="Search...">
-    <button id="searchButton" class="search-button">Search</button>
+    <input type="text" class="search-input" id="searchInput" placeholder="Search...">
+    <button class="search-button" onclick="searchFiles()">Search</button>
   </div>
 
   <div class="file-list" id="fileList">
@@ -91,23 +88,32 @@
   </div>
 
   <script>
-    const filesPerPage = 36;
+    const fileList = document.getElementById('fileList');
+    const paginationContainer = document.getElementById('pagination');
     let currentPage = 1;
-    let files = [];
-    let filteredFiles = [];
+    let filesPerPage = 36;
+    let filesData = [];
 
-    function displayFiles(filesToDisplay) {
+    fetch('https://api.github.com/repos/CrimsonfiedOfficial/ConfigStorage/contents')
+      .then(response => response.json())
+      .then(data => {
+        filesData = data.filter(file => file.type === 'file' && (file.name.endsWith('.zip') || file.name.endsWith('.rar')));
+        updateFileList();
+      })
+      .catch(error => {
+        console.error('Error fetching file list:', error);
+        fileList.textContent = 'Error fetching file list. Please try again later.';
+      });
+
+    function updateFileList() {
       const startIndex = (currentPage - 1) * filesPerPage;
       const endIndex = startIndex + filesPerPage;
-      const filesToShow = filesToDisplay.slice(startIndex, endIndex);
-
-      const fileList = document.getElementById('fileList');
-      fileList.innerHTML = '';
+      const currentFiles = filesData.slice(startIndex, endIndex);
 
       const buttonContainer = document.createElement('div');
       buttonContainer.classList.add('button-container');
 
-      filesToShow.forEach(file => {
+      currentFiles.forEach(file => {
         const downloadButton = document.createElement('a');
         downloadButton.href = file.download_url;
         downloadButton.textContent = file.name;
@@ -117,74 +123,39 @@
         buttonContainer.appendChild(downloadButton);
       });
 
+      // Clear previous files and append new files to the file list
+      fileList.innerHTML = '';
       fileList.appendChild(buttonContainer);
-    }
 
-    function changePage(page) {
-      if (page < 1 || page > Math.ceil(filteredFiles.length / filesPerPage)) {
-        return;
-      }
-
-      currentPage = page;
-      displayFiles(filteredFiles);
-      updatePagination();
-    }
-
-    function updatePagination() {
-      const totalFiles = filteredFiles.length;
-      const totalPages = Math.ceil(totalFiles / filesPerPage);
-
-      const pagination = document.getElementById('pagination');
-      pagination.innerHTML = '';
-
+      // Update pagination buttons
+      const totalPages = Math.ceil(filesData.length / filesPerPage);
+      paginationContainer.innerHTML = '';
       for (let i = 1; i <= totalPages; i++) {
-        const pageButton = document.createElement('button');
+        const pageButton = document.createElement('a');
+        pageButton.href = '#';
         pageButton.textContent = i;
         pageButton.classList.add('page-button');
-
         if (i === currentPage) {
           pageButton.classList.add('active');
-        } else {
-          pageButton.addEventListener('click', () => changePage(i));
         }
-
-        pagination.appendChild(pageButton);
+        pageButton.addEventListener('click', () => {
+          currentPage = i;
+          updateFileList();
+        });
+        paginationContainer.appendChild(pageButton);
       }
     }
 
     function searchFiles() {
       const searchInput = document.getElementById('searchInput').value.toLowerCase();
-      filteredFiles = [];
-
-      if (searchInput === '') {
-        filteredFiles = files;
+      if (!searchInput) {
+        filesData = data.filter(file => file.type === 'file' && (file.name.endsWith('.zip') || file.name.endsWith('.rar')));
       } else {
-        filteredFiles = files.filter(file => file.name.toLowerCase().includes(searchInput));
+        filesData = data.filter(file => file.type === 'file' && (file.name.endsWith('.zip') || file.name.endsWith('.rar')) && file.name.toLowerCase().includes(searchInput));
       }
-
       currentPage = 1;
-      displayFiles(filteredFiles);
-      updatePagination();
+      updateFileList();
     }
-
-    document.getElementById('searchButton').addEventListener('click', searchFiles);
-
-    // Adding an event listener to the search input to trigger the search on keyup
-    document.getElementById('searchInput').addEventListener('keyup', searchFiles);
-
-    fetch('https://api.github.com/repos/CrimsonfiedOfficial/ConfigStorage/contents')
-      .then(response => response.json())
-      .then(data => {
-        files = data.filter(file => file.type === 'file' && (file.name.endsWith('.zip') || file.name.endsWith('.rar')));
-        filteredFiles = [...files];
-        displayFiles(filteredFiles);
-        updatePagination();
-      })
-      .catch(error => {
-        console.error('Error fetching file list:', error);
-        const fileList = document.getElementById('fileList');
-        fileList.textContent = 'Error fetching file list. Please try again later.';
-      });
   </script>
 </body>
 </html>
